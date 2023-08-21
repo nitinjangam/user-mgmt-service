@@ -21,7 +21,7 @@
 go.work
 
 # ignore local configuration file
-./config/locals.yaml
+/config/locals.json
 
 # Ignore generated source code
-./api/api.gen.go
+/api/api.gen.go
