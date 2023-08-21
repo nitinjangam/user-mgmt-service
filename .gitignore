@@ -19,3 +19,9 @@
 
 # Go workspace file
 go.work
+
+# ignore local configuration file
+./config/locals.yaml
+
+# Ignore generated source code
+./api/api.gen.go
