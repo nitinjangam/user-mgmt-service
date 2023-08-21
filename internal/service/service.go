@@ -144,11 +144,11 @@ func (u *User) GetAuthUsersMe(c *gin.Context) {}
 
 // JSONResponse builds and sends a JSON response
 func JSONResponse(c *gin.Context, statusCode int, data interface{}, headers map[string]string, message string) {
-	if headers != nil {
-		for header, value := range headers {
-			c.Header(header, value)
-		}
+
+	for header, value := range headers {
+		c.Header(header, value)
 	}
+
 	response := Response{
 		StatusCode: statusCode,
 		Data:       data,

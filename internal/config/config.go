@@ -61,10 +61,10 @@ func newDefaultConfig() AppConfig {
 func (c *AppConfig) readConfigFromLocalFile(filePath string) error {
 	//open local configuration file
 	fl, err := os.Open(filePath)
-	defer fl.Close()
 	if err != nil {
 		return fmt.Errorf("error while opening local file to read configuration: %v", err)
 	}
+	defer fl.Close()
 
 	//read data from file
 	bt, err := io.ReadAll(fl)
