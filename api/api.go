@@ -37,11 +37,15 @@ func New(config *Config) (*Handler, error) {
 
 	openapi.Servers = nil
 
-	router.Use(middleware.OapiRequestValidator(openapi))
-
 	router.Use(correlation.TraceMiddleware)
 
-	router.Use(auth.AuthMiddleware)
+	// router.Use(auth.AuthenticationFunc())
+
+	validatorOptions := &middleware.Options{}
+
+	validatorOptions.Options.AuthenticationFunc = auth.AuthenticationFunc1
+
+	router.Use(middleware.OapiRequestValidatorWithOptions(openapi, validatorOptions))
 
 	for _, service := range config.Services {
 		RegisterHandlers(router, service)
