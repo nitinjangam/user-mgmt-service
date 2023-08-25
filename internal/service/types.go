@@ -17,8 +17,3 @@ type User struct {
 	conf *config.AppConfig
 	db   db.DbService
 }
-
-type loginRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
