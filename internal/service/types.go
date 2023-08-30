@@ -15,5 +15,5 @@ type Response struct {
 // User represents the requirements of the service
 type User struct {
 	conf *config.AppConfig
-	db   db.DbService
+	db   db.Service
 }

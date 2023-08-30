@@ -22,7 +22,7 @@ type AppConfig struct {
 	Host           string        `json:"HOST" envconfig:"HOST"`
 	HttpTimeout    time.Duration `json:"HTTP_TIMEOUT" envconfig:"HTTP_TIMEOUT"`
 	LogLevel       string        `json:"LOG_LEVEL" envconfig:"LOG_LEVEL"`
-	DBConfig       db.DBConfig   `json:"DB_CONFIG" envconfig:"DB_CONFIG"`
+	DBConfig       db.Config     `json:"DB_CONFIG" envconfig:"DB_CONFIG"`
 	TokenSecretKey string        `json:"TOKEN_SECRET_KEY" envconfig:"TOKEN_SECRET_KEY"`
 	Logger         *slog.Logger
 }

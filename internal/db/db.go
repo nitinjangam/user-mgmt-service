@@ -3,14 +3,12 @@ package db
 import (
 	"context"
 	"fmt"
-	"log"
-
 	"github.com/nitinjangam/go-utils/logger"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-type DBConfig struct {
+type Config struct {
 	DBHost     string `json:"DB_HOST" envconfig:"DB_HOST"`
 	DBPort     string `json:"DB_PORT" envconfig:"DB_PORT"`
 	DBName     string `json:"DB_NAME" envconfig:"DB_NAME"`
@@ -24,11 +22,7 @@ type DB struct {
 	User User
 }
 
-type DbService interface {
-	ChangePassword(ctx context.Context)
-	Login(ctx context.Context)
-	Logout(ctx context.Context)
-	RefreshToken(ctx context.Context)
+type Service interface {
 	RegisterUser(ctx context.Context, usr *User) error
 	GetUser(ctx context.Context, username string) (*User, error)
 	StoreTokens(ctx context.Context, tokens *Token) error
@@ -36,11 +30,10 @@ type DbService interface {
 	DeleteTokens(ctx context.Context, userID uint, accessToken string) error
 	GetUserByUserID(ctx context.Context, userID uint) (*User, error)
 	TokenExistInDB(ctx context.Context, userID uint, accessToken string) error
-	GetAuthUsersMe(ctx context.Context)
-	CloseConn(ctx context.Context)
 }
 
-func New(ctx context.Context, conf *DBConfig) DbService {
+func New(ctx context.Context, conf *Config) Service {
+	log := logger.FromContext(ctx)
 	// Construct the connection string
 	connStr := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s sslmode=%s",
 		conf.DBHost, conf.DBPort, conf.DBName, conf.DBUser, conf.DBPassword, conf.DBSslMode)
@@ -48,28 +41,12 @@ func New(ctx context.Context, conf *DBConfig) DbService {
 	// Open a database connection
 	db, err := gorm.Open(postgres.Open(connStr), &gorm.Config{})
 	if err != nil {
-		log.Fatal(err)
+		log.Error("error while opening database connection", err)
 	}
 
 	return &DB{
 		Conn: db,
 	}
-}
-
-func (db *DB) ChangePassword(ctx context.Context) {
-
-}
-
-func (db *DB) Login(ctx context.Context) {
-
-}
-
-func (db *DB) Logout(ctx context.Context) {
-
-}
-
-func (db *DB) RefreshToken(ctx context.Context) {
-
 }
 
 func (db *DB) RegisterUser(ctx context.Context, usr *User) error {
@@ -82,14 +59,6 @@ func (db *DB) RegisterUser(ctx context.Context, usr *User) error {
 	}
 
 	return nil
-}
-
-func (db *DB) GetAuthUsersMe(ctx context.Context) {
-
-}
-
-func (db *DB) CloseConn(ctx context.Context) {
-
 }
 
 func (db *DB) GetUser(ctx context.Context, username string) (*User, error) {
@@ -155,7 +124,7 @@ func (db *DB) GetUserByUserID(ctx context.Context, userID uint) (*User, error) {
 		return nil, err
 	}
 
-	if user == nil {
+	if user.Username == "" {
 		log.Error("user not found in database")
 		return nil, fmt.Errorf("user not found in database")
 	}
@@ -172,9 +141,9 @@ func (db *DB) TokenExistInDB(ctx context.Context, userID uint, accessToken strin
 		return tx.Error
 	}
 
-	if tok == nil {
+	if tok.AccessToken == "" {
 		log.Error("access token not found in db")
-		return fmt.Errorf("Invalid access token")
+		return fmt.Errorf("invalid access token")
 	}
 	return nil
 }

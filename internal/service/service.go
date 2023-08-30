@@ -17,20 +17,20 @@ import (
 )
 
 // New returns a User Service instance
-func New(config *config.AppConfig, db db.DbService) *User {
+func New(config *config.AppConfig, db db.Service) *User {
 	return &User{
 		conf: config,
 		db:   db,
 	}
 }
 
-// Change user's password
+// PostAuthChangePassword Change user's password
 // (POST /auth/change-password)
 func (u *User) PostAuthChangePassword(c *gin.Context) {
 
 }
 
-// Authenticate user and get an access token
+// PostAuthLogin Authenticate user and get an access token
 // (POST /auth/login)
 func (u *User) PostAuthLogin(c *gin.Context) {
 	log := logger.FromContext(c.Request.Context())
@@ -47,7 +47,7 @@ func (u *User) PostAuthLogin(c *gin.Context) {
 	user, err := u.db.GetUser(c.Request.Context(), usr.Username)
 	if err != nil {
 		log.Error("login: error while getting user from database", "error", err)
-		// TBD check the error and give valid response like internal servr error/invalid creds
+		// TBD check the error and give valid response like internal server error/invalid credentials
 		JSONResponse(c, http.StatusUnauthorized, nil, nil, "invalid credentials")
 		return
 	}
@@ -102,7 +102,7 @@ func (u *User) PostAuthLogin(c *gin.Context) {
 
 }
 
-// Logout the user and invalidate tokens
+// PostAuthLogout Logout the user and invalidate tokens
 // (POST /auth/logout)
 func (u *User) PostAuthLogout(c *gin.Context) {
 	log := logger.FromContext(c.Request.Context())
@@ -130,7 +130,7 @@ func (u *User) PostAuthLogout(c *gin.Context) {
 
 }
 
-// Refresh access token using refresh token
+// PostAuthRefresh Refresh access token using refresh token
 // (POST /auth/refresh)
 func (u *User) PostAuthRefresh(c *gin.Context) {
 	log := logger.FromContext(c.Request.Context())
@@ -191,21 +191,21 @@ func (u *User) PostAuthRefresh(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// Register a new user
+// PostAuthRegister Register a new user
 // (POST /auth/register)
 func (u *User) PostAuthRegister(c *gin.Context) {
 	log := logger.FromContext(c.Request.Context())
 	log.Info("received register user request")
 	usr := api.PostAuthRegisterJSONRequestBody{}
 	if err := c.ShouldBindJSON(&usr); err != nil {
-		log.Error("registeruser: invalid request body", "error", err)
+		log.Error("register user: invalid request body", "error", err)
 		JSONResponse(c, http.StatusBadRequest, nil, nil, "invalid request body")
 		return
 	}
 
 	hashedPassword, err := auth.HashPassword(usr.Password)
 	if err != nil {
-		log.Error("registeruser: error while hashing password", "error", err)
+		log.Error("register user: error while hashing password", "error", err)
 		JSONResponse(c, http.StatusInternalServerError, nil, nil, "internal server error")
 		return
 	}
@@ -216,10 +216,10 @@ func (u *User) PostAuthRegister(c *gin.Context) {
 		PasswordHash: hashedPassword,
 	}
 
-	// TBD implemet username exist, user with same email exist
+	// TBD implement username exist, user with same email exist
 	err = u.db.RegisterUser(c.Request.Context(), &usrDB)
 	if err != nil {
-		log.Error("registeruser: internal server error", "error", err)
+		log.Error("register user: internal server error", "error", err)
 		JSONResponse(c, http.StatusInternalServerError, nil, nil, "internal server error")
 		return
 	}
@@ -237,7 +237,7 @@ func (u *User) PostAuthRegister(c *gin.Context) {
 
 }
 
-// Get the authenticated user's profile
+// GetAuthUsersMe Get the authenticated user's profile
 // (GET /auth/users/me)
 func (u *User) GetAuthUsersMe(c *gin.Context) {
 	log := logger.FromContext(c.Request.Context())

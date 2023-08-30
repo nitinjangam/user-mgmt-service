@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	fmt.Println("Starting user-mgmt-service....")
+	fmt.Println(`Starting user-mgmt-service....`)
 	cnfg := config.New()
 	if cnfg == nil {
 		log.Fatal("error while reading configuration")
