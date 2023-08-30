@@ -34,6 +34,8 @@ type DbService interface {
 	StoreTokens(ctx context.Context, tokens *Token) error
 	UpdateAccessToken(ctx context.Context, tokens *Token) error
 	DeleteTokens(ctx context.Context, userID uint, accessToken string) error
+	GetUserByUserID(ctx context.Context, userID uint) (*User, error)
+	TokenExistInDB(ctx context.Context, userID uint, accessToken string) error
 	GetAuthUsersMe(ctx context.Context)
 	CloseConn(ctx context.Context)
 }
@@ -140,6 +142,39 @@ func (db *DB) DeleteTokens(ctx context.Context, userID uint, accessToken string)
 	if tx.RowsAffected == 0 {
 		log.Error("error while deleting tokens from db", "error", fmt.Errorf("access token not found in db"))
 		return fmt.Errorf("no refresh token found in db")
+	}
+	return nil
+}
+
+func (db *DB) GetUserByUserID(ctx context.Context, userID uint) (*User, error) {
+	log := logger.FromContext(ctx)
+
+	user := &User{}
+	if err := db.Conn.Where("user_id = ?", userID).First(user).Error; err != nil {
+		log.Error("error while getting user from database", "error", err.Error())
+		return nil, err
+	}
+
+	if user == nil {
+		log.Error("user not found in database")
+		return nil, fmt.Errorf("user not found in database")
+	}
+
+	return user, nil
+}
+
+func (db *DB) TokenExistInDB(ctx context.Context, userID uint, accessToken string) error {
+	log := logger.FromContext(ctx)
+	tok := &Token{}
+	tx := db.Conn.Table("tokens").Where("user_id = ?", userID).Where("access_token = ?", accessToken).First(tok)
+	if tx.Error != nil {
+		log.Error("error while getting access token from db", "error", tx.Error.Error())
+		return tx.Error
+	}
+
+	if tok == nil {
+		log.Error("access token not found in db")
+		return fmt.Errorf("Invalid access token")
 	}
 	return nil
 }

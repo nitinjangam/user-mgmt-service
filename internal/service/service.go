@@ -239,7 +239,45 @@ func (u *User) PostAuthRegister(c *gin.Context) {
 
 // Get the authenticated user's profile
 // (GET /auth/users/me)
-func (u *User) GetAuthUsersMe(c *gin.Context) {}
+func (u *User) GetAuthUsersMe(c *gin.Context) {
+	log := logger.FromContext(c.Request.Context())
+
+	log.Info("GetAuthUsersMe handler called")
+
+	authorizationHeader := c.GetHeader("Authorization")
+	if !strings.HasPrefix(authorizationHeader, "Bearer ") {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization header"})
+		return
+	}
+	accessToken := strings.TrimPrefix(authorizationHeader, "Bearer ")
+
+	userID, err := strconv.Atoi(c.GetHeader("user_id"))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid user_id"})
+		return
+	}
+
+	if err := u.db.TokenExistInDB(c, uint(userID), accessToken); err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid user session, please login again"})
+		return
+	}
+
+	user, err := u.db.GetUserByUserID(c, uint(userID))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid user_id"})
+		return
+	}
+
+	userIDStr := strconv.Itoa(int(user.UserID))
+	resp := &api.UserProfile{
+		Email:    &user.Email,
+		UserId:   &userIDStr,
+		Username: &user.Username,
+	}
+
+	c.JSON(http.StatusOK, resp)
+
+}
 
 // JSONResponse builds and sends a JSON response
 func JSONResponse(c *gin.Context, statusCode int, data interface{}, headers map[string]string, message string) {
